@@ -2,9 +2,9 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>APE GENESIS — Base Mint</title>
+  <title>APE GENESIS — Thirdweb Mint</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <meta name="description" content="APE GENESIS. 750 early apes. Mint on Base." />
+  <meta name="description" content="APE GENESIS. 750 early apes. Free Mint via Thirdweb." />
 
   <style>
     body { margin:0; font-family:system-ui, -apple-system, BlinkMacSystemFont, sans-serif; background:#000; color:#fff; }
@@ -18,7 +18,6 @@
     .stat b { display:block; font-size:22px; }
     .mint-box { margin:60px auto; max-width:420px; background:#0d0d0d; padding:28px; border-radius:22px; text-align:center; border:1px solid #1a1a1a; }
     .mint-box h2 { margin-bottom:10px; }
-    .price { opacity:0.7; margin-bottom:20px; }
     input { width:60px; padding:8px; border-radius:8px; border:none; margin-right:10px; text-align:center; font-weight:700; }
     button { padding:16px 28px; border-radius:16px; border:none; font-size:18px; font-weight:700; cursor:pointer; background:#fff; color:#000; }
     button:hover { opacity:0.9; }
@@ -29,26 +28,56 @@
     footer { margin:100px 0 30px; text-align:center; opacity:0.4; font-size:13px; }
   </style>
 
-  <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
+  <script type="module">
+    import { ThirdwebSDK } from "https://cdn.jsdelivr.net/npm/@thirdweb-dev/sdk@3.12.6/dist/browser/index.js";
+
+    let sdk;
+    let contract;
+    const CONTRACT_ADDRESS = "0xAD83860A4cf59020D6cc940B9c82c2447252A307"; // 
+
+    window.addEventListener("load", async () => {
+      if (!window.ethereum) { alert("Install MetaMask or Base wallet"); return; }
+      try { sdk = new ThirdwebSDK(window.ethereum); contract = await sdk.getContract(CONTRACT_ADDRESS); }
+      catch(e){ console.error(e); alert("Failed to load contract: " + e.message); }
+    });
+
+    let mintInProgress = false;
+
+    async function mint() {
+      if (!contract) { alert("Contract not loaded yet, please wait"); return; }
+      if (mintInProgress) return;
+
+      const quantity = parseInt(document.getElementById("quantity").value);
+      if (quantity < 1 || quantity > 10) { alert("Quantity must be between 1 and 10"); return; }
+
+      mintInProgress = true;
+      const mintButton = document.querySelector("button");
+      mintButton.disabled = true;
+
+      try {
+        const tx = await contract.erc721.mint(quantity);
+        alert("Mint successful! Transaction hash: " + tx.receipt.transactionHash);
+      } catch(err) { console.error(err); alert("Mint error: " + err.message); }
+      finally { mintInProgress = false; mintButton.disabled = false; }
+    }
+  </script>
 </head>
 <body>
   <div class="container">
-
     <div class="hero">
       <img src="https://via.placeholder.com/500x500" alt="APE GENESIS">
       <h1>APE GENESIS</h1>
-      <div class="tagline">750 early apes · Base Network</div>
+      <div class="tagline">750 early apes · Thirdweb Free Mint</div>
     </div>
 
     <div class="stats">
       <div class="stat"><b>750</b>Supply</div>
-      <div class="stat"><b>Base</b>Network</div>
+      <div class="stat"><b>Thirdweb</b>SDK</div>
       <div class="stat"><b>Genesis</b>Mint</div>
     </div>
 
     <div class="mint-box">
       <h2>Public Mint</h2>
-      <div class="price">Mint price: 0.005 ETH per NFT</div>
       <input type="number" id="quantity" min="1" max="10" value="1">
       <button onclick="mint()">Mint APE</button>
       <p style="margin-top:14px;opacity:0.5;font-size:13px;">Connect your wallet on Base network</p>
@@ -57,64 +86,22 @@
     <div class="section">
       <h2>The Story</h2>
       <p>
-        Before DAOs. Before venture capital.<br><br>
         750 apes appeared inside the blockchain jungle.<br>
-        They represent early builders, anonymous believers, and those who stayed when nobody cared.<br><br>
-        No roadmap promises. No marketing theatre. Just presence.
-      </p>
-    </div>
 
-    <div class="section">
-      <h2>Principles</h2>
-      <p>
-        • Fixed supply<br>
-        • No VC<br>
-        • Public mint<br>
-        • Built in public<br>
-        • Culture &gt; utility
+Євген Чебукін, [06.01.2026 14:10]
+They represent early builders, anonymous believers, and those who stayed when nobody cared.<br>
+        Free mint via Thirdweb SDK.
       </p>
     </div>
 
     <div class="section links">
       <h2>Links</h2>
-      <a href="#" target="_blank">Contract (BaseScan)</a>
-      <a href="#" target="_blank">Farcaster</a>
+      <a href="#" target="_blank">Contract</a>
       <a href="#" target="_blank">Twitter / X</a>
       <a href="#" target="_blank">Discord</a>
     </div>
 
     <footer>© 2026 APE GENESIS</footer>
   </div>
-
-  <script>
-    const contractAddress = "0xAD83860A4cf59020D6cc940B9c82c2447252A307";
-    const mintPrice = 0.005;
-    const abi = ["function mint(uint256 quantity) public payable"];
-
-    async function mint() {
-      if (!window.ethereum) {
-        alert("Install MetaMask or Base wallet");
-        return;
-      }
-
-      try {
-        await ethereum.request({ method: 'eth_requestAccounts' });
-        const provider = new ethers.providers.Web3Provider(window.ethereum);
-        const signer = provider.getSigner();
-        const contract = new ethers.Contract(contractAddress, abi, signer);
-
-        const quantity = parseInt(document.getElementById("quantity").value);
-        if(quantity < 1) { alert("Enter a quantity greater than 0"); return; }
-
-        // Use parseUnits to avoid float precision issues
-        const value = ethers.utils.parseUnits((mintPrice * quantity).toString(), "ether");
-        const tx = await contract.mint(quantity, { value });
-        alert("Mint transaction sent: " + tx.hash);
-      } catch (err) {
-        console.error(err);
-        alert("Mint error: " + err.message);
-      }
-    }
-  </script>
 </body>
 </html>
