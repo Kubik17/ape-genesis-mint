@@ -37,7 +37,7 @@
 
     window.addEventListener("load", async () => {
       if (!window.ethereum) { alert("Install MetaMask or Base wallet"); return; }
-      try { sdk = new ThirdwebSDK(window.ethereum); contract = await sdk.getContract(CONTRACT_ADDRESS); }
+      try { sdk = new ThirdwebSDK(window.ethereum); contract = await sdk.getContract(0xAD83860A4cf59020D6cc940B9c82c2447252A307); }
       catch(e){ console.error(e); alert("Failed to load contract: " + e.message); }
     });
 
